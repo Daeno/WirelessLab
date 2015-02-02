@@ -1,0 +1,96 @@
+function [N, count_n, x, y, z] = baseline_simple(instr,x,y,z, p_x, p_y)
+%% Parameter declaration
+if nargin<1,   instr=[200 50];     end
+n=instr(1);  MaxGeneration=instr(2);
+
+range=[-10 10 ; -10 10];    % range=[xmin xmax ymin ymax];
+N = 0;
+
+step = 0.2;                 % maximum single step
+threshold = -0.3;
+% Display the shape of the objective function
+
+if(nargin < 4)
+[x,y,z] = randfunc_g(range,100);
+end
+figure(1);
+surfc(x,y,z);
+
+% generating the initial locations of n fireflies
+if(nargin < 6)
+    [xo, yn]=init_pos(n,range(1,:),range(2,:));
+    xo = xn;
+    yo = yn;
+else
+    xn = p_x;
+    yn = p_y;
+end
+zo = interp2(x,y,z,xo,yo);
+
+figure(2);
+count_n = 0;                % Loop Counter
+
+contour(x,y,z,15);
+hold on;
+%% Main Loop
+while(count_n < MaxGeneration)
+    count_n = count_n + 1;
+    xo = xn;
+    yo = yn;
+    zo = interp2(x,y,z,xo,yo);                      % Evaluate new solutions
+    [Lightn, Index]=sort(zo);                        % Ranking the fireflies by their light intensity
+
+    N(count_n) = sum(Lightn < threshold);
+
+    [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold); % Move all fireflies to the better locations
+    
+    axis equal;
+    plot(xo,yo,'.','markersize',10,'markerfacecolor','g');
+    quiver(xo,yo,xn-xo,yn-yo);
+    hold off;
+    contour(x,y,z,15);
+    if(Lightn(n) < threshold) break;  end
+end % Main Loop End
+
+end
+%% ----- All subfunctions are listed here ---------
+% subfunction used in main function
+%% Move all fireflies toward brighter ones
+function [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold)
+    ni=size(yo,2);
+    xn = xo;
+    yn = yo;
+    zn = zo;
+    for i=1:ni,
+        %% Stop when small enough
+        if zo(i) < threshold, 
+            continue; 
+        end
+        %% generate next position
+        r = rand * step;
+        theta = rand * 2 * pi;
+        xn(i) = xo(i) + r*cos(theta);
+        yn(i) = yo(i) + r*sin(theta);
+        [xn,yn]=findrange(xn,yn,range);
+        zn(i) = interp2(x,y,z,xo(i),yo(i));
+        %% if new z is smaller than original z, pick a new one
+        if (zn(i) > zo(i))                   
+            xn = xo;
+            yn = yo;
+        end
+    end % end for i
+    
+end
+% Reduce the randomness during iterations
+
+%% Make sure the fireflies are within the range
+function [xn,yn]=findrange(xn,yn,range)
+for i=1:length(yn),
+   if xn(i)<=range(1,1), xn(i)=range(1,1); end
+   if xn(i)>=range(1,2), xn(i)=range(1,2); end
+   if yn(i)<=range(2,1), yn(i)=range(2,1); end
+   if yn(i)>=range(2,2), yn(i)=range(2,2); end
+end
+
+end
+

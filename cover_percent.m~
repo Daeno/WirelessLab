@@ -1,0 +1,7 @@
+function coverage = cover_percent(x, y, z, p_x, p_y, range, threshold )
+%% A function that caculate the percentage of low point that has been found
+%  caculate the coverage in following criteria
+%  
+low_count = sum(z<threahold);
+
+end
