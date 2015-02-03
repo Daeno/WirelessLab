@@ -47,7 +47,8 @@ while(count_n < MaxGeneration)
         axis equal;
         contour(x,y,z,15);
         hold on;
-        plot(xo,yo,'.','markersize',10,'markerfacecolor','g');
+        plot(xo(zo>threshold),yo(zo>threshold),'.','markersize',10,'markerfacecolor','r');
+        plot(xo(zo<=threshold),yo(zo<=threshold),'g.','markersize',10,'markerfacecolor','r');
         quiver(xo,yo,xn-xo,yn-yo);
         drawnow;
         hold off;
