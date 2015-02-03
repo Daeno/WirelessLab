@@ -127,21 +127,4 @@ function alpha=newalpha(alpha,delta,threshold,zn)
         end
     end
 end
-% Make sure the fireflies are within the range
-function [xn,yn]=findrange(xn,yn,range)
-
-for i=1:length(yn),
-   if xn(i)<=range(1,1), xn(i)=range(1,1); end
-   if xn(i)>=range(1,2), xn(i)=range(1,2); end
-   if yn(i)<=range(2,1), yn(i)=range(2,1); end
-   if yn(i)>=range(2,2), yn(i)=range(2,2); end
-end
-%rn = xn.*xn + yn.*yn;
-%for i = 1:length(yn)
-%   if(rn(i) > 0.0004)
-%       xn(i) = 0.02*xn(i) / (rn(i)^0.5) ;
-%       yn(i) = 0.02*yn(i) / (rn(i)^0.5) ;
-%   end
-%end
-end
 %  ============== end =====================================
