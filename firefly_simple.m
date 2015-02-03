@@ -51,7 +51,8 @@ while(count_n < MaxGeneration)
         axis equal;
         contour(x,y,z,15);
         hold on;
-        plot(xo,yo,'.','markersize',10,'markerfacecolor','g');
+        plot(xo(zo>threshold),yo(zo>threshold),'.','markersize',10,'markerfacecolor','r');
+        plot(xo(zo<=threshold),yo(zo<=threshold),'g.','markersize',10,'markerfacecolor','r');
         quiver(xo,yo,xn-xo,yn-yo);
         drawnow;
         hold off;
@@ -65,56 +66,55 @@ end
 
 %% Move all fireflies toward brighter ones
 function [xn,yn] = ffa_move(xo, yo, zo, step, alpha, gamma, range, threshold, rpl_range)
-ni=size(yo,2); nj=size(yo,2);
-xn = xo;
-yn = yo;
-zn = zo;
-min_zo = min(zo);
-for i=1:ni,
-    %% whether to stop when fulfilled the criteria
-    %if zo(i) < threshold, 
-            %continue; 
-    %end
-    for j=1:nj,
-        r   =   sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
-        %% simple repulsive force node i if j is in the range of 
-        if r < rpl_range,
-            xn(i)= xn(i) + (xo(i) - xo(j));
-            yn(i)= yn(i) + (yo(i) - yo(j));
-            continue;
-        end
-        %% Attractivness based on Ligntness(or z) (z larger, lightness deemer)
-        if  zo(i) > zo(j) && zo(j) < threshold,     % Brighter and smaller than 
-            beta0   =   zo(j)/min_zo;               % Normalize Brightness
-            beta    =   beta0 * exp(-gamma*r.^2);   % exponential decay with r^2
-            xn(i)   =   xn(i) +(xo(j) - xo(i))*beta;
-            yn(i)   =   yn(i) +(yo(j) - yo(i))*beta;
-        end
-    end % end for j
-    r_g = rand * step;
-    theta = rand * 2 * pi;
-    xn(i) = xn(i) + alpha(i)*r_g*cos(theta);
-    yn(i) = yn(i) + alpha(i)*r_g*sin(theta);
-end % end for i
+    ni=size(yo,2); nj=size(yo,2);
+    xn = xo;
+    yn = yo;
+    zn = zo;
+    min_zo = min(zo);
+    for i=1:ni,
+        %% whether to stop when fulfilled the criteria
+        %if zo(i) < threshold, 
+        %        continue; 
+        %end
+        for j=1:nj,
+            r   =   sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
+            %% simple repulsive force node i if j is in the range of 
+            if r < rpl_range,
+                xn(i)= xn(i) + (xo(i) - xo(j));
+                yn(i)= yn(i) + (yo(i) - yo(j));
+                continue;
+            end
+            %% Attractivness based on Ligntness(or z) (z larger, lightness deemer)
+            if  zo(i) > zo(j) && zo(j) < threshold,     % Brighter and smaller than 
+                beta0   =   min_zo/zo(j);               % Normalize Brightness
+                beta    =   beta0 * exp(-gamma*r.^2);   % exponential decay with r^2
+                xn(i)   =   xn(i) +(xo(j) - xo(i))*beta;
+                yn(i)   =   yn(i) +(yo(j) - yo(i))*beta;
+            end
+        end % end for j
+        r_g = rand * step;
+        theta = rand * 2 * pi;
+        xn(i) = xn(i) + alpha(i)*r_g*cos(theta);
+        yn(i) = yn(i) + alpha(i)*r_g*sin(theta);
+    end % end for i
 
-% TODO check if most of the point is moving in maximum step, if so, adjust
-% the parameter
-dx = xn - xo;
-dy = yn - yo;
-r = dx.*dx + dy.*dy;
+    dx = xn - xo;
+    dy = yn - yo;
+    r = dx.*dx + dy.*dy;
 
-for idx = 1:numel(dx)
-   if(r(idx) > step^2)
-        dx(idx) = dx(idx) / r(idx).^0.5 * step;
-        dy(idx) = dy(idx) / r(idx).^0.5 * step;
-   end
-end
+    for idx = 1:numel(dx)
+       if(r(idx) > step^2)
+            dx(idx) = dx(idx) / r(idx).^0.5 * step;
+            dy(idx) = dy(idx) / r(idx).^0.5 * step;
+       end
+    end
 
-xn = dx + xo;
-yn = dy + yo;
-[xn,yn]=findrange(xn,yn,range);
+    xn = dx + xo;
+    yn = dy + yo;
+    [xn,yn] = findrange(xn,yn,range);                   % confine xn,yn inside the range
 end
 %% Reduce the randomness during iterations
+% maximum alpha = 3
 function alpha=newalpha(alpha,delta,threshold,zn)
     for i=1:numel(zn)
         if(zn(i) <= threshold)
@@ -123,8 +123,7 @@ function alpha=newalpha(alpha,delta,threshold,zn)
             alpha(i) = alpha(i) / delta;
         end
         if(alpha(i) > 3)
-            alpha(i) = 1;
+            alpha(i) = 3;
         end
     end
 end
-%  ============== end =====================================
