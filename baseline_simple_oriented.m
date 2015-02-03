@@ -38,10 +38,10 @@ while(count_n < MaxGeneration)
     xo = xn;
     yo = yn;
     zo = interp2(x,y,z,xo,yo);              % Evaluate new solutions
-    [Lightn, Index]=sort(zo);               % Ranking the fireflies by their light intensity
+    [Lighto, Index]=sort(zo);               % Ranking the fireflies by their light intensity
 
-    N(count_n) = sum(Lightn < threshold);
-
+    N(count_n) = sum(Lighto < threshold);
+    
     [xn,yn,dx,dy,hh]= simple_move(x,y,z,xo,yo,zo,dx,dy, hh,step,range, threshold, max_hold); % Move all fireflies to the better locations
     if(draw)
         axis equal;
@@ -53,13 +53,13 @@ while(count_n < MaxGeneration)
         hold off;
     end
     
-    if(Lightn(n) < threshold) break;  end
+    if(Lighto(n) < threshold) break;  end
 end % Main Loop End
 
 end
 %% ----- All subfunctions are listed here ---------
 % subfunction used in main function
-%% Move all fireflies toward brighter ones
+%% simple moving pattern
 function [xn,yn, dx, dy, holdTime]= simple_move(x,y,z,xo,yo,zo,dx,dy,holdTime,step,range, threshold, max_hold)
     ni=size(yo,2);
     xn = xo;
