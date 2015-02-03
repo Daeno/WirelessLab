@@ -79,7 +79,6 @@ for i=1:ni,
         r   =   sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
         %% simple repulsive force node i if j is in the range of 
         if r < rpl_range,
-            
             xn(i)= xn(i) + (xo(i) - xo(j));
             yn(i)= yn(i) + (yo(i) - yo(j));
             continue;
