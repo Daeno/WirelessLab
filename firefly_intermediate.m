@@ -71,9 +71,14 @@ function [xn,yn] = ffa_move(xo, yo, zo, step, alpha, gamma, range, threshold, rp
     yn = yo;
     zn = zo;
     %% Brightness modification
+    %  based on r^2
     for i = 1:ni,
-    
+        for j = 1:nj,
+            r   =  sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
+            zn(i) = zn(i) + 0.4*exp(-0.3*r^2)*zo(j);
+        end
     end
+    zo = zn;
     min_zo = min(zo);
     for i=1:ni,
         %% whether to stop when fulfilled the criteria
