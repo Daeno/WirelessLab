@@ -13,6 +13,12 @@ step            =   0.2;                        % Maximum step a node can move i
 rpl_range       =   0.3;                        % Repulsive force range
 gamma           =   1;                          % Distance decay constant
 delta           =   0.7;                        % 
+% function modifing parameters
+global max_pull r_param order      
+max_pull        =   0.3;
+r_param         =   0.3;
+order           =   3;
+show_function_modify(max_pull, r_param, order);
 %% target function generation
 if(nargin < 4)
 [x,y,z] = randfunc_g(range,100);
@@ -69,11 +75,9 @@ function [xn,yn] = ffa_move(xo, yo, zo, step, alpha, gamma, range, threshold, rp
     ni=size(yo,2); nj=size(yo,2);
     xn = xo;
     yn = yo;
-    zn = zo;
     %% Brightness modification
-    for i = 1:ni,
-    
-    end
+    %  based on r^2
+    zo = modifing_target_f(xo, yo, zo);
     min_zo = min(zo);
     for i=1:ni,
         %% whether to stop when fulfilled the criteria
@@ -83,11 +87,11 @@ function [xn,yn] = ffa_move(xo, yo, zo, step, alpha, gamma, range, threshold, rp
         for j=1:nj,
             r   =   sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
             %% simple repulsive force node i if j is in the range of 
-            if r < rpl_range,
-                xn(i)= xn(i) + (xo(i) - xo(j));
-                yn(i)= yn(i) + (yo(i) - yo(j));
-                continue;
-            end
+            %if r < rpl_range,
+            %    xn(i)= xn(i) + (xo(i) - xo(j));
+            %    yn(i)= yn(i) + (yo(i) - yo(j));
+            %    continue;
+            %end
             %% Attractivness based on Ligntness(or z) (z larger, lightness deemer)
             if  zo(i) > zo(j) && zo(j) < threshold,     % Brighter and smaller than 
                 beta0   =   min_zo/zo(j);               % Normalize Brightness
@@ -128,6 +132,19 @@ function alpha=newalpha(alpha,delta,threshold,zn)
         end
         if(alpha(i) > 3)
             alpha(i) = 3;
+        end
+    end
+end
+%% function modification
+function zn = modifing_target_f(xo, yo, zo)
+    zn = zo;
+    ni = size(zo,2);
+    nj = ni;
+    global max_pull r_param order
+    for i = 1:ni,
+        for j = 1:nj,
+            r   =  sqrt((xo(i)-xo(j))^2+(yo(i)-yo(j))^2);
+            zn(i) = zn(i) + max_pull*exp(-r_param*r^order)*zo(j);
         end
     end
 end
