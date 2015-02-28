@@ -25,14 +25,15 @@ else
 end
 
 % constants for reduction of intensity
-[m, n] = meshgrid(-0.4:0.2:0.4, -0.4:0.2:0.4);
+[m, n] = meshgrid(-0.6:0.2:0.6, -0.6:0.2:0.6);
 r = m.^2 + n.^2;
 a = 2.*power(4, -r);
 
 % compensate discoveries
 cntd = zeros(size(xn));
 numd = zeros(size(xn));
-mapd = zeros(n, size(x));
+
+mapd = zeros(size(xn, 2), size(x, 1), size(x, 2));
 
 
 figure(2);
@@ -46,9 +47,17 @@ while(count_n < MaxGeneration)
     zo = interp2(x,y,z,xo,yo);              % Evaluate new solutions
     [Lightn, Index]=sort(zo);               % Ranking the fireflies by their light intensity
 
-    N(count_n) = sum(Lightn < threshold);
+    % N(count_n) = sum(Lightn < threshold);
+    N(count_n) = sum(numd);
+    
+    ztemp = zo;
+    for i=1:size(xn, 2),
+        if numd(i) ~= 0,
+            ztemp = ztemp + mapd(i); 
+        end
+    end
 
-    [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold); % Move all fireflies to the better locations
+    [xn,yn, cntd, numd, mapd]= simple_move(x,y,z,xo,yo,ztemp,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
     if(draw)
         axis equal;
         contour(x,y,z,15);
@@ -60,18 +69,19 @@ while(count_n < MaxGeneration)
         hold off;
     end
     
-    if(Lightn(n) < threshold) break;  end
+    % if(Lightn(n) < threshold) break;  end
 end % Main Loop End
 
 end
 %% ----- All subfunctions are listed here ---------
 % subfunction used in main function
 %% Move all fireflies toward brighter ones
-function [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold)
+function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, step, range, threshold, cntd, numd, mapd, a)
     ni=size(yo,2);
     xn = xo;
     yn = yo;
     zn = zo;
+    [I, J] = findindex(xn, yn, range, step);
     for i=1:ni,
         %% Stop when small enough
         if zo(i) < threshold, 
@@ -84,16 +94,17 @@ function [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold)
                 % first colume denotes the numbered of flag discovered
                 % the rest of colume records the flag position.
                 numd(i) = numd(i) + 1;
-                [I, J] = findindex(xn, yn, range, step);
                 gridrange = size(x);
-                for m = I-3:I+3,
-                    for n = J-3:J+3,
-                        if m > 0 && m < gridrange(1, 1) && n > 0 && n < gridrange(1, 2),
-                            mapd(i,m,n) = mapd(i,m,n) + a(m-I+4, n-J+4);
+                for m = I(i)-3:I(i)+3,
+                    for n = J(i)-3:J(i)+3,
+                        if m > 1 && m <= gridrange(1, 1) && n > 1 && n <= gridrange(1, 2),
+                            mapd(i,m,n) = mapd(i,m,n) + a(m-I(i)+4, n-J(i)+4);
                         end
                     end
                 end
             end
+        elseif cntd(i) ~= 0, 
+            cntd(i) = 0;
         end
         %% generate next position
         r = rand * step;
@@ -115,6 +126,7 @@ end
 function [I, J] = findindex(p_x, p_y, range, step)
     I = ceil((p_x-range(1, 1))/step);
     J = ceil((p_y-range(2, 1))/step);
+    [I, J] = findrange(I, J, range);
 end
 
 
