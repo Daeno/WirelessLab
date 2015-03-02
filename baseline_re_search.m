@@ -1,6 +1,6 @@
 function [N, count_n, x, y, z] = baseline_re_search(instr,x,y,z, p_x, p_y)
 %% Parameter declaration
-if nargin<1,   instr=[100 100 1];     end
+if nargin<1,   instr=[100 50 1];     end
 n=instr(1);  MaxGeneration=instr(2); draw = instr(3);
 
 range=[-10 10 ; -10 10];    % range=[xmin xmax ymin ymax];
@@ -27,7 +27,7 @@ end
 % constants for reduction of intensity
 [m, n] = meshgrid(-0.6:0.2:0.6, -0.6:0.2:0.6);
 r = m.^2 + n.^2;
-a = 5.*power(4, -r);
+a = 1.*power(4, -r);
 
 % compensate discoveries
 cntd = zeros(size(xn));
@@ -64,7 +64,7 @@ while(count_n < MaxGeneration)
     [xn,yn, cntd, numd, mapd]= simple_move(x,y,ztemp,xo,yo,zo,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
     if(draw)
         axis equal;
-        contour(x,y,z,15);
+        contour(x,y,ztemp,15);
         hold on;
         plot(xo(zo>threshold),yo(zo>threshold),'.','markersize',10,'markerfacecolor','r');
         plot(xo(zo<=threshold),yo(zo<=threshold),'g.','markersize',10,'markerfacecolor','r');
@@ -84,6 +84,8 @@ for i=1:size(xn, 2),
         ztemp = ztemp + squeeze(mapd(i, :, :)); 
     end
 end
+figure(3);
+surfc(x,y,ztemp);
 debug = ztemp - z;
 unfoundLowArea = (ztemp < -1);
 unfoundSumLowArea = sum(sum(unfoundLowArea))
