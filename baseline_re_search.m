@@ -1,6 +1,6 @@
 function [N, count_n, x, y, z] = baseline_re_search(instr,x,y,z, p_x, p_y)
 %% Parameter declaration
-if nargin<1,   instr=[100 50 1];     end
+if nargin<1,   instr=[50 50 1];     end
 n=instr(1);  MaxGeneration=instr(2); draw = instr(3);
 
 range=[-10 10 ; -10 10];    % range=[xmin xmax ymin ymax];
@@ -27,7 +27,7 @@ end
 % constants for reduction of intensity
 [m, n] = meshgrid(-0.6:0.2:0.6, -0.6:0.2:0.6);
 r = m.^2 + n.^2;
-a = 1.*power(4, -r);
+a = 5.*power(4, -r);
 
 % compensate discoveries
 cntd = zeros(size(xn));
@@ -117,7 +117,7 @@ function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, step, range
                 for m = I(i)-3:I(i)+3,
                     for n = J(i)-3:J(i)+3,
                         if m > 1 && m <= gridrange(1, 1) && n > 1 && n <= gridrange(1, 2),
-                            mapd(i,m,n) = mapd(i,m,n) + a(m-I(i)+4, n-J(i)+4);
+                            mapd(i,n,m) = mapd(i,n,m) + a(m-I(i)+4, n-J(i)+4);
                         end
                     end
                 end
