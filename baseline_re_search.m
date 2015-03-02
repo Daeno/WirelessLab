@@ -1,6 +1,6 @@
 function [N, count_n, x, y, z] = baseline_re_search(instr,x,y,z, p_x, p_y)
 %% Parameter declaration
-if nargin<1,   instr=[50 50 1];     end
+if nargin<1,   instr=[10 100 1];     end
 n=instr(1);  MaxGeneration=instr(2); draw = instr(3);
 
 range=[-10 10 ; -10 10];    % range=[xmin xmax ymin ymax];
@@ -23,6 +23,7 @@ else
     xn = p_x;
     yn = p_y;
 end
+zo = interp2(x,y,z,xn,yn);
 
 % constants for reduction of intensity
 [m, n] = meshgrid(-0.6:0.2:0.6, -0.6:0.2:0.6);
@@ -52,16 +53,17 @@ while(count_n < MaxGeneration)
         if numd(i) ~= 0,
             ztemp = ztemp + squeeze(mapd(i, :, :)); 
         end
+        zo(i) = interp2(x,y,z+squeeze(mapd(i, :, :)),xo(i),yo(i));
     end
     
-    zo = interp2(x,y,ztemp,xo,yo);              % Evaluate new solutions
-    [Lightn, Index]=sort(zo);               % Ranking the fireflies by their light intensity
+%    zo = interp2(x,y,ztemp,xo,yo);              % Evaluate new solutions
+%    [Lightn, Index]=sort(zo);               % Ranking the fireflies by their light intensity
 
     % N(count_n) = sum(Lightn < threshold);
     N(count_n) = sum(numd);
     
 
-    [xn,yn, cntd, numd, mapd]= simple_move(x,y,ztemp,xo,yo,zo,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
+    [xn,yn, cntd, numd, mapd]= simple_move(x,y,z,xo,yo,zo,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
     if(draw)
         axis equal;
         contour(x,y,ztemp,15);
@@ -131,7 +133,7 @@ function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, step, range
         xn(i) = xo(i) + r*cos(theta);
         yn(i) = yo(i) + r*sin(theta);
         [xn(i),yn(i)]=findrange(xn(i),yn(i),range);
-        zn(i) = interp2(x,y,z,xn(i),yn(i));
+        zn(i) = interp2(x,y,z+squeeze(mapd(i, :, :)),xn(i),yn(i));
         %% if new z is bigger than original z, pick a new one
         if (zn(i) > zo(i))                   
             xn(i) = xo(i) - r*cos(theta);
