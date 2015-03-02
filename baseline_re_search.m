@@ -1,6 +1,6 @@
 function [N, count_n, x, y, z] = baseline_re_search(instr,x,y,z, p_x, p_y)
 %% Parameter declaration
-if nargin<1,   instr=[200 50 1];     end
+if nargin<1,   instr=[100 100 1];     end
 n=instr(1);  MaxGeneration=instr(2); draw = instr(3);
 
 range=[-10 10 ; -10 10];    % range=[xmin xmax ymin ymax];
@@ -27,14 +27,15 @@ end
 % constants for reduction of intensity
 [m, n] = meshgrid(-0.6:0.2:0.6, -0.6:0.2:0.6);
 r = m.^2 + n.^2;
-a = 2.*power(4, -r);
+a = 5.*power(4, -r);
 
 % compensate discoveries
 cntd = zeros(size(xn));
 numd = zeros(size(xn));
-
 mapd = zeros(size(xn, 2), size(x, 1), size(x, 2));
 
+lowArea = (z < -1);
+sumLowArea = sum(sum(lowArea))
 
 figure(2);
 count_n = 0;                    % Loop Counter
@@ -44,20 +45,23 @@ while(count_n < MaxGeneration)
     count_n = count_n + 1;
     xo = xn;
     yo = yn;
-    zo = interp2(x,y,z,xo,yo);              % Evaluate new solutions
+    
+    %set flag to certain area, indicate those found places
+    ztemp = z;
+    for i=1:size(xn, 2),
+        if numd(i) ~= 0,
+            ztemp = ztemp + squeeze(mapd(i, :, :)); 
+        end
+    end
+    
+    zo = interp2(x,y,ztemp,xo,yo);              % Evaluate new solutions
     [Lightn, Index]=sort(zo);               % Ranking the fireflies by their light intensity
 
     % N(count_n) = sum(Lightn < threshold);
     N(count_n) = sum(numd);
     
-    ztemp = zo;
-    for i=1:size(xn, 2),
-        if numd(i) ~= 0,
-            ztemp = ztemp + mapd(i); 
-        end
-    end
 
-    [xn,yn, cntd, numd, mapd]= simple_move(x,y,z,xo,yo,ztemp,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
+    [xn,yn, cntd, numd, mapd]= simple_move(x,y,ztemp,xo,yo,zo,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
     if(draw)
         axis equal;
         contour(x,y,z,15);
@@ -71,6 +75,19 @@ while(count_n < MaxGeneration)
     
     % if(Lightn(n) < threshold) break;  end
 end % Main Loop End
+
+% debug & output those unfound
+ztemp = z;
+for i=1:size(xn, 2),
+    if numd(i) ~= 0,
+        %squeeze(mapd(i, :, :));
+        ztemp = ztemp + squeeze(mapd(i, :, :)); 
+    end
+end
+debug = ztemp - z;
+unfoundLowArea = (ztemp < -1);
+unfoundSumLowArea = sum(sum(unfoundLowArea))
+
 
 end
 %% ----- All subfunctions are listed here ---------
@@ -126,7 +143,6 @@ end
 function [I, J] = findindex(p_x, p_y, range, step)
     I = ceil((p_x-range(1, 1))/step);
     J = ceil((p_y-range(2, 1))/step);
-    [I, J] = findrange(I, J, range);
 end
 
 
