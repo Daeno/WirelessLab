@@ -1,4 +1,4 @@
-function [N, count_n, x, y, z] = baseline_re_search(instr,x,y,z, p_x, p_y)
+function [N, count_n, x, y, z] = baseline_oriented_re_search(instr,x,y,z, p_x, p_y)
 %% Parameter declaration
 if nargin<1,   instr=[10 100 1];     end
 n=instr(1);  MaxGeneration=instr(2); draw = instr(3);
@@ -8,6 +8,7 @@ N = 0;
 
 step = 0.2;                 % maximum single step
 threshold = -1;
+max_hold = 5;
 % Display the shape of the objective function
 
 if(nargin < 4)
@@ -40,6 +41,11 @@ sumLowArea = sum(sum(lowArea))
 
 figure(2);
 count_n = 0;                    % Loop Counter
+r = rand(1,n) * step;
+theta = rand(1,n) * 2 * pi;
+dx = r.*cos(theta);
+dy = r.*sin(theta);
+hh = zeros(size(x));
 
 %% Main Loop
 while(count_n < MaxGeneration)
@@ -63,7 +69,7 @@ while(count_n < MaxGeneration)
     N(count_n) = sum(numd);
     
 
-    [xn,yn, cntd, numd, mapd]= simple_move(x,y,z,xo,yo,zo,step,range, threshold, cntd, numd, mapd, a); % Move all fireflies to the better locations
+    [xn,yn, cntd, numd, mapd]= simple_move(x,y,z,xo,yo,zo,dx,dy,hh,step,range,threshold,max_hold,cntd,numd,mapd,a); % Move all fireflies to the better locations
     if(draw)
         axis equal;
         contour(x,y,ztemp,15);
@@ -88,7 +94,6 @@ for i=1:size(xn, 2),
 end
 figure(3);
 surfc(x,y,ztemp);
-debug = ztemp - z;
 unfoundLowArea = (ztemp < -1);
 unfoundSumLowArea = sum(sum(unfoundLowArea))
 
@@ -97,7 +102,7 @@ end
 %% ----- All subfunctions are listed here ---------
 % subfunction used in main function
 %% Move all fireflies toward brighter ones
-function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, step, range, threshold, cntd, numd, mapd, a)
+function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, dx, dy, holdTime, step, range, threshold, max_hold, cntd, numd, mapd, a)
     ni=size(yo,2);
     xn = xo;
     yn = yo;
@@ -128,17 +133,25 @@ function [xn,yn, cntd, numd, mapd]= simple_move(x, y, z, xo, yo, zo, step, range
             cntd(i) = 0;
         end
         %% generate next position
-        r = rand * step;
-        theta = rand * 2 * pi;
-        xn(i) = xo(i) + r*cos(theta);
-        yn(i) = yo(i) + r*sin(theta);
+        xn(i) = xo(i) + dx(i);
+        yn(i) = yo(i) + dy(i);
         [xn(i),yn(i)]=findrange(xn(i),yn(i),range);
         zn(i) = interp2(x,y,z+squeeze(mapd(i, :, :)),xn(i),yn(i));
         %% if new z is bigger than original z, pick a new one
-        if (zn(i) > zo(i))                   
-            xn(i) = xo(i) - r*cos(theta);
-            yn(i) = yo(i) - r*sin(theta);
-            [xn(i),yn(i)]=findrange(xn(i),yn(i),range);
+        if (zn(i) > zo(i))
+            if(holdTime(i) < max_hold)
+                holdTime(i) = holdTime(i) + 1;
+            else
+                r = rand * step;
+                theta = rand * 2 * pi;
+                dx(i) = r*cos(theta);
+                dy(i) = r*sin(theta);
+                xn(i) = xo(i) + dx(i);
+                yn(i) = yo(i) + dy(i);
+                [xn(i),yn(i)]=findrange(xn(i),yn(i),range);
+            end
+        else
+            holdTime(i) = 0;
         end
     end % end for i
     
