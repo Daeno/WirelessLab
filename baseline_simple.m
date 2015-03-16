@@ -40,8 +40,14 @@ while(count_n < MaxGeneration)
     [xn,yn]= simple_move(x,y,z,xo,yo,zo,step,range, threshold); % Move all fireflies to the better locations
     if(draw)
         axis equal;
-        contour(x,y,z,15);
+        zmin = floor(min(z(:)));
+        zmax = ceil(max(z(:)));
+        zinc = (zmax - zmin) / 15;
+        zlevs = zmin:zinc:zmax;
+        contour(x,y,z,zlevs);
         hold on;
+        z_show = zmin:zinc:-0.1;
+        contour(x,y,z,[zmin:0.7:-1,-1],'LineWidth',2);
         plot(xo(zo>threshold),yo(zo>threshold),'.','markersize',10,'markerfacecolor','r');
         plot(xo(zo<=threshold),yo(zo<=threshold),'g.','markersize',10,'markerfacecolor','r');
         quiver(xo,yo,xn-xo,yn-yo);
